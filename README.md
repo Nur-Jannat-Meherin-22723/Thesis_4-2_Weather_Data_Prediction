@@ -1,1 +1,1 @@
-# Thesis_4-2_Weather_Data_Prediction
+data_splitting_with_RF_and_SVR branch contains an input file named "2d_ssa_reconstructed_11111_max_temp.xlsx". This ssa reconstructed data file of station 11111 is used as input in time_series_input_11111_max_temp.py file to split the dataset into training data and testing dataset named respectively as "train_data_11111_timeseries.xlsx" and "test_data_11111_timeseries.xlsx".

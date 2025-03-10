@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: url('bg.jpeg') no-repeat center center/cover;
+        }
+        .active {
+            background-color: #2563EB !important; 
+            color: white;
+        }
+        .station-btn:hover {
+            background-color: #373841; 
+            color: white;
+        }
+    </style>
+</head>
+<body class="h-screen text-white">
+    <div class="bg-black bg-opacity-50 h-full p-8">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold">Weather Dashboard</h1>
+            <div class="mt-7"></div>
+            <nav class="flex justify-center space-x-6">
+                <button id="Dhaka" class="px-6 py-3 bg-gray-800 rounded-lg text-lg station-btn" onclick="selectCity('Dhaka')">Dhaka</button>
+                <button id="Tangail" class="px-6 py-3 bg-gray-800 rounded-lg text-lg station-btn" onclick="selectCity('Tangail')">Tangail</button>
+                <button id="Faridpur" class="px-6 py-3 bg-gray-800 rounded-lg text-lg station-btn" onclick="selectCity('Faridpur')">Faridpur</button>
+                <button id="Madaripur" class="px-6 py-3 bg-gray-800 rounded-lg text-lg station-btn" onclick="selectCity('Madaripur')">Madaripur</button>
+            </nav>
+        </header>
+
+        <div class="mt-12"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div class="flex flex-col space-y-3 items-center">
+                <div class="flex items-center space-x-2 w-96">
+                    <label class="w-20 text-white">Year:</label>
+                    <select id="year" class="text-black p-1 rounded w-full"></select>
+                </div>
+                <div class="mt-7"></div>
+                <div class="flex items-center space-x-2 w-96">
+                    <label class="w-20 text-white">Month:</label>
+                    <select id="month" class="text-black p-1 rounded w-full"></select>
+                </div>
+                <div class="mt-7"></div>
+                <div class="flex items-center space-x-2 w-96">
+                    <label class="w-20 text-white">Day:</label>
+                    <select id="day" class="text-black p-1 rounded w-full"></select>
+                </div>
+            
+                <div class="mt-25"></div>
+                <div class="w-96 flex justify-center mt-6">
+                    <button class="px-6 py-2 bg-blue-500 text-white rounded-lg text-md shadow-md hover:bg-blue-600 transition" style="margin-left: 65px;" onclick="fetchData()">Get Data</button>
+                </div>
+            </div>
+
+            <!-- Weather Data Display Box -->
+            <div class="bg-white bg-opacity-20 p-6 rounded text-center">
+                <h2 class="text-xl font-bold">Weather Data</h2>
+                <p id="temp" class="text-2xl mt-4">Max Temp: -- °C</p>
+                <p id="min-temp" class="text-2xl mt-2">Min Temp: -- °C</p>
+                <p id="humidity" class="text-2xl mt-2">Humidity: -- %</p> <!-- Humidity Added --> 
+                <p id="rainfall" class="text-2xl mt-2">Rainfall: -- mm</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let weatherData = [];
+        let minWeatherData = [];
+        let rainfallData = [];
+        let humidityData = []; // Humidity Data
+        let currentCity = "Dhaka"; // Default city
+
+        async function loadWeatherData(city) {
+            try {
+                // Load max temp data
+                const maxResponse = await fetch(city + "_max_temp.json");
+                weatherData = await maxResponse.json();
+
+                // Load min temp data
+                const minResponse = await fetch(city + "_min_temp.json");
+                minWeatherData = await minResponse.json();
+
+                // Load rainfall data
+                const rainResponse = await fetch(city + "_rainfall.json");
+                rainfallData = await rainResponse.json();
+
+                // Load humidity data
+                const humidityResponse = await fetch(city + "_rh.json");
+                humidityData = await humidityResponse.json();
+
+                console.log(`Weather data loaded for ${city}`);
+                populateDropdowns();
+            } catch (error) {
+                console.error("Error loading weather data:", error);
+            }
+        }
+
+        function populateDropdowns() {
+            let yearSelect = document.getElementById("year");
+            let monthSelect = document.getElementById("month");
+            let daySelect = document.getElementById("day");
+
+            let years = [...new Set(weatherData.map(item => item.Year))];
+            yearSelect.innerHTML = years.map(year => `<option value="${year}">${year}</option>`).join("");
+
+            let months = [...new Set(weatherData.map(item => item.Month))];
+            monthSelect.innerHTML = months.map(month => `<option value="${month}">${month}</option>`).join("");
+
+            daySelect.innerHTML = Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+        }
+
+        function fetchData() {
+            let selectedYear = parseInt(document.getElementById("year").value);
+            let selectedMonth = parseInt(document.getElementById("month").value);
+            let selectedDay = `Day_${document.getElementById("day").value}`;
+
+            let maxData = weatherData.find(item => item.Year === selectedYear && item.Month === selectedMonth);
+            let minData = minWeatherData.find(item => item.Year === selectedYear && item.Month === selectedMonth);
+            let rainData = rainfallData.find(item => item.Year === selectedYear && item.Month === selectedMonth);
+            let humidityDataPoint = humidityData.find(item => item.Year === selectedYear && item.Month === selectedMonth);
+
+            if (maxData) {
+                let maxTempValue = maxData[selectedDay] || "N/A";
+                document.getElementById("temp").innerText = `Max Temp: ${maxTempValue} °C`;
+            } else {
+                document.getElementById("temp").innerText = "No data available";
+            }
+
+            if (minData) {
+                let minTempValue = minData[selectedDay] || "N/A";
+                document.getElementById("min-temp").innerText = `Min Temp: ${minTempValue} °C`;
+            } else {
+                document.getElementById("min-temp").innerText = "No data available";
+            }
+
+            if (rainData) {
+                let rainfallValue = rainData[selectedDay] || "0"; 
+                document.getElementById("rainfall").innerText = `Rainfall: ${rainfallValue} mm`;
+            } else {
+                document.getElementById("rainfall").innerText = "Rainfall: 0 mm";
+            }
+
+            if (humidityDataPoint) {
+                let humidityValue = humidityDataPoint[selectedDay] || "N/A"; 
+                document.getElementById("humidity").innerText = `Humidity: ${humidityValue} %`;
+            } else {
+                document.getElementById("humidity").innerText = "Humidity: -- %";
+            }
+        }
+
+        function selectCity(city) {
+            currentCity = city;
+            loadWeatherData(city);
+
+            document.querySelectorAll('.station-btn').forEach(button => button.classList.remove("active"));
+            document.getElementById(city).classList.add("active");
+
+            document.getElementById("temp").innerText = "Max Temp: -- °C";
+            document.getElementById("min-temp").innerText = "Min Temp: -- °C";
+            document.getElementById("rainfall").innerText = "Rainfall: -- mm";
+            document.getElementById("humidity").innerText = "Humidity: -- %"; // Reset Humidity
+        }
+
+        window.onload = () => loadWeatherData(currentCity);
+    </script>
+</body>
+</html>
